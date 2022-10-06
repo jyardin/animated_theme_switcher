@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'clippers/theme_switcher_clipper.dart';
 
 typedef ThemeBuilder = Widget Function(BuildContext, ThemeData theme);
 
@@ -26,9 +25,9 @@ class ThemeProvider extends StatefulWidget {
   State<ThemeProvider> createState() => _ThemeProviderState();
 }
 
-class _ThemeProviderState extends State<ThemeProvider>
-    with TickerProviderStateMixin {
+class _ThemeProviderState extends State<ThemeProvider> with TickerProviderStateMixin {
   late AnimationController _controller;
+  late ThemeModel _model;
 
   @override
   void initState() {
@@ -37,14 +36,13 @@ class _ThemeProviderState extends State<ThemeProvider>
       duration: widget.duration,
       vsync: this,
     );
+    _model = ThemeModel(startTheme: widget.initTheme, controller: _controller);
   }
 
   @override
   Widget build(BuildContext context) {
-    var model =
-        ThemeModel(startTheme: widget.initTheme, controller: _controller);
     return ThemeModelInheritedNotifier(
-      notifier: model,
+      notifier: _model,
       child: Builder(builder: (context) {
         var model = ThemeModelInheritedNotifier.of(context);
         return RepaintBoundary(
@@ -64,9 +62,7 @@ class ThemeModelInheritedNotifier extends InheritedNotifier<ThemeModel> {
   }) : super(key: key, notifier: notifier, child: child);
 
   static ThemeModel of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<ThemeModelInheritedNotifier>()!
-        .notifier!;
+    return context.dependOnInheritedWidgetOfExactType<ThemeModelInheritedNotifier>()!.notifier!;
   }
 }
 
@@ -120,8 +116,7 @@ class ThemeModel extends ChangeNotifier {
   }
 
   Future<void> _saveScreenshot() async {
-    final boundary = previewContainer.currentContext!.findRenderObject()
-        as RenderRepaintBoundary;
+    final boundary = previewContainer.currentContext!.findRenderObject() as RenderRepaintBoundary;
     image = await boundary.toImage(pixelRatio: ui.window.devicePixelRatio);
     notifyListeners();
   }
@@ -132,13 +127,9 @@ class ThemeModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Offset _getSwitcherCoordinates(
-      GlobalKey<State<StatefulWidget>> switcherGlobalKey) {
-    final renderObject =
-        switcherGlobalKey.currentContext!.findRenderObject()! as RenderBox;
+  Offset _getSwitcherCoordinates(GlobalKey<State<StatefulWidget>> switcherGlobalKey) {
+    final renderObject = switcherGlobalKey.currentContext!.findRenderObject()! as RenderBox;
     final size = renderObject.size;
-    return renderObject
-        .localToGlobal(Offset.zero)
-        .translate(size.width / 2, size.height / 2);
+    return renderObject.localToGlobal(Offset.zero).translate(size.width / 2, size.height / 2);
   }
 }
